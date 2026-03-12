@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
 @inject MfeNavigationService MfeNav
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <div class="page" style="display:flex; flex-direction:column; height:100vh;">
 
@@ -29,11 +31,21 @@
 
 @code {
     private string? _activeMfeUrl;
+    private string? _activeMfeKey;
+    private DotNetObjectReference<MainLayout>? _dotnetRef;
 
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Nav.LocationChanged += OnLocationChanged;
-        ResolveActiveMfe(Nav.Uri);
+        if (firstRender)
+        {
+            // Registra el listener de mensajes del iframe
+            _dotnetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("listenMfeNavigation", _dotnetRef);
+
+            Nav.LocationChanged += OnLocationChanged;
+            ResolveActiveMfe(Nav.Uri);
+            StateHasChanged();
+        }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -45,17 +57,41 @@
     private void ResolveActiveMfe(string uri)
     {
         if (uri.Contains("/inicio"))
+        {
+            _activeMfeKey = "Inicio";
             _activeMfeUrl = MfeNav.GetMfe("Inicio").IframeUrl;
+        }
         else if (uri.Contains("/portafolio"))
+        {
+            _activeMfeKey = "Portafolio";
             _activeMfeUrl = MfeNav.GetMfe("Portafolio").IframeUrl;
+        }
         else if (uri.Contains("/siniestros"))
+        {
+            _activeMfeKey = "Siniestros";
             _activeMfeUrl = MfeNav.GetMfe("Siniestros").IframeUrl;
+        }
         else
+        {
+            _activeMfeKey = null;
             _activeMfeUrl = null;
+        }
     }
 
-    public void Dispose()
+    // Este método lo llama el iframe via postMessage
+    [JSInvokable]
+    public void OnMfeNavigated(string mfePath)
+    {
+        if (_activeMfeKey is null) return;
+
+        // Actualiza la URL del navegador sin recargar el iframe
+        var shellPath = $"/{_activeMfeKey.ToLower()}/{mfePath}";
+        Nav.NavigateTo(shellPath, forceLoad: false);
+    }
+
+    public async ValueTask DisposeAsync()
     {
         Nav.LocationChanged -= OnLocationChanged;
+        _dotnetRef?.Dispose();
     }
 }
