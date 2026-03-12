@@ -10,8 +10,6 @@
         <NavMenu />
     </div>
 
-    <div> Aquí va el MFE: </div>
-
     <div style="flex:1; overflow:hidden;">
         @if (_activeMfeUrl is not null)
         {
@@ -36,17 +34,20 @@
     private string? _activeMfeKey;
     private DotNetObjectReference<MainLayout>? _dotnetRef;
 
+    protected override void OnInitialized()
+    {
+        // Resuelve el MFE activo desde el primer render
+        Nav.LocationChanged += OnLocationChanged;
+        ResolveActiveMfe(Nav.Uri);
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // Registra el listener de mensajes del iframe
+            // Solo registra el listener de JS aquí
             _dotnetRef = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("listenMfeNavigation", _dotnetRef);
-
-            Nav.LocationChanged += OnLocationChanged;
-            ResolveActiveMfe(Nav.Uri);
-            StateHasChanged();
         }
     }
 
@@ -80,13 +81,10 @@
         }
     }
 
-    // Este método lo llama el iframe via postMessage
     [JSInvokable]
     public void OnMfeNavigated(string mfePath)
     {
         if (_activeMfeKey is null) return;
-
-        // Actualiza la URL del navegador sin recargar el iframe
         var shellPath = $"/{_activeMfeKey.ToLower()}/{mfePath}";
         Nav.NavigateTo(shellPath, forceLoad: false);
     }
