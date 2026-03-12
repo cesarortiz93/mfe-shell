@@ -66,28 +66,30 @@
         if (path.StartsWith("/inicio"))
         {
             _activeMfeKey = "Inicio";
-            var subroute = path.Replace("/inicio", "").TrimStart('/');
-
-            // Si tiene subruta carga directo en esa página
+            // Extrae la subruta: /inicio/security → security
+            var subroute = path.Substring("/inicio".Length).TrimStart('/');
+            var baseUrl = MfeNav.GetMfe("Inicio").IframeUrl;
             _activeMfeUrl = string.IsNullOrEmpty(subroute)
-                ? MfeNav.GetMfe("Inicio").IframeUrl
-                : $"{MfeNav.GetMfe("Inicio").IframeUrl}/{subroute}";
+                ? baseUrl
+                : $"{baseUrl}/{subroute}";
         }
         else if (path.StartsWith("/portafolio"))
         {
             _activeMfeKey = "Portafolio";
-            var subroute = path.Replace("/portafolio", "").TrimStart('/');
+            var subroute = path.Substring("/portafolio".Length).TrimStart('/');
+            var baseUrl = MfeNav.GetMfe("Portafolio").IframeUrl;
             _activeMfeUrl = string.IsNullOrEmpty(subroute)
-                ? MfeNav.GetMfe("Portafolio").IframeUrl
-                : $"{MfeNav.GetMfe("Portafolio").IframeUrl}/{subroute}";
+                ? baseUrl
+                : $"{baseUrl}/{subroute}";
         }
         else if (path.StartsWith("/siniestros"))
         {
             _activeMfeKey = "Siniestros";
-            var subroute = path.Replace("/siniestros", "").TrimStart('/');
+            var subroute = path.Substring("/siniestros".Length).TrimStart('/');
+            var baseUrl = MfeNav.GetMfe("Siniestros").IframeUrl;
             _activeMfeUrl = string.IsNullOrEmpty(subroute)
-                ? MfeNav.GetMfe("Siniestros").IframeUrl
-                : $"{MfeNav.GetMfe("Siniestros").IframeUrl}/{subroute}";
+                ? baseUrl
+                : $"{baseUrl}/{subroute}";
         }
         else
         {
