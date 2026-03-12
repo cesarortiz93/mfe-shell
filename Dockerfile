@@ -16,8 +16,9 @@ RUN dotnet restore "Shell.Blazor/Shell.Blazor.csproj"
 
 COPY . .
 
-WORKDIR /src/MFE.Shell
-RUN dotnet publish -c Release -o /app/publish
+WORKDIR /src/Shell.Blazor
+
+RUN dotnet publish "Shell.Blazor.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
@@ -25,4 +26,5 @@ WORKDIR /app
 EXPOSE 8080
 
 COPY --from=build /app/publish .
+
 ENTRYPOINT ["dotnet", "Shell.Blazor.dll"]
