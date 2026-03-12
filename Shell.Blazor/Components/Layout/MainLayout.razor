@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject MfeNavigationService MfeNav
 
 <div class="page">
     <main>
@@ -7,13 +9,54 @@
         </div>
 
         <article class="content px-4">
-            @Body
+            @if (_activeMfeUrl is not null)
+            {
+                <iframe src="@_activeMfeUrl"
+                        style="width:100%; height:calc(100vh - 60px); border:none;"
+                        title="MFE Content">
+                </iframe>
+            }
+            else
+            {
+                <!-- Página de inicio del Shell -->
+                <h2>Bienvenido</h2>
+                <p>Selecciona un módulo del menú</p>
+            }
         </article>
     </main>
 </div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+
+@code {
+    private string? _activeMfeUrl;
+
+    protected override void OnInitialized()
+    {
+        // Escucha cambios de navegación para saber qué MFE mostrar
+        Nav.LocationChanged += OnLocationChanged;
+        ResolveActiveMfe(Nav.Uri);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        ResolveActiveMfe(e.Location);
+        StateHasChanged();
+    }
+
+    private void ResolveActiveMfe(string uri)
+    {
+        if (uri.Contains("/inicio"))
+            _activeMfeUrl = MfeNav.GetMfe("Inicio").Url;
+        else if (uri.Contains("/portafolio"))
+            _activeMfeUrl = MfeNav.GetMfe("Portafolio").Url;
+        else if (uri.Contains("/siniestros"))
+            _activeMfeUrl = MfeNav.GetMfe("Siniestros").Url;
+        else
+            _activeMfeUrl = null;
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}
