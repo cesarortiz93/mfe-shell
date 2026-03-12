@@ -1,0 +1,14 @@
+﻿
+@inject MfeNavigationService MfeNav
+
+ <nav class="flex items-center gap-2">
+     <span class="text-lg font-bold text-green-600">HDI</span>
+     <ul class="flex ml-4">
+        @foreach (var (key, mfe) in MfeNav.GetAll())
+        {
+        <li class="px-2">
+                <NavLink class="text-gray-400 hover:text-green-600" href="@mfe.Url">@mfe.Name</NavLink>
+        </li>
+        } 
+     </ul>
+ </nav>

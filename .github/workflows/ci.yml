@@ -1,0 +1,63 @@
+name: CI/CD - MFE Shell
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/mfe-shell
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Add GitHub NuGet source
+        run: |
+          dotnet nuget remove source github || true
+          dotnet nuget add source https://nuget.pkg.github.com/cesarortiz93/index.json \
+            --name github \
+            --username cesarortiz93 \
+            --password ${{ secrets.TOKEN_PAT }} \
+            --store-password-in-clear-text
+
+      - name: Restore
+        run: dotnet restore Shell.Blazor/Shell.Blazor.csproj
+
+      - name: Build
+        run: dotnet build Shell.Blazor/Shell.Blazor.csproj -c Release --no-restore
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKEN_PAT }}
+
+      - name: Build & Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            TOKEN_PAT=${{ secrets.TOKEN_PAT }}
+
+      - name: Trigger infrastructure deploy
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_DISPATCH_TOKEN }}
+          repository: cesarortiz93/mfe-infrastructure
+          event-type: mfe-shell-updated
+          client-payload: |
+            { "version": "${{ github.sha }}", "mfe": "shell" }
