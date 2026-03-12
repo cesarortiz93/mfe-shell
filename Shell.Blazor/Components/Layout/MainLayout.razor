@@ -32,7 +32,6 @@
 
     protected override void OnInitialized()
     {
-        // Escucha cambios de navegación para saber qué MFE mostrar
         Nav.LocationChanged += OnLocationChanged;
         ResolveActiveMfe(Nav.Uri);
     }
@@ -46,11 +45,11 @@
     private void ResolveActiveMfe(string uri)
     {
         if (uri.Contains("/inicio"))
-            _activeMfeUrl = MfeNav.GetMfe("Inicio").Url;
+            _activeMfeUrl = MfeNav.GetMfe("Inicio").IframeUrl;
         else if (uri.Contains("/portafolio"))
-            _activeMfeUrl = MfeNav.GetMfe("Portafolio").Url;
+            _activeMfeUrl = MfeNav.GetMfe("Portafolio").IframeUrl;
         else if (uri.Contains("/siniestros"))
-            _activeMfeUrl = MfeNav.GetMfe("Siniestros").Url;
+            _activeMfeUrl = MfeNav.GetMfe("Siniestros").IframeUrl;
         else
             _activeMfeUrl = null;
     }
