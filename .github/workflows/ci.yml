@@ -23,11 +23,7 @@ jobs:
       - name: Add GitHub NuGet source
         run: |
           dotnet nuget remove source github || true
-          dotnet nuget add source https://nuget.pkg.github.com/cesarortiz93/index.json \
-            --name github \
-            --username cesarortiz93 \
-            --password ${{ secrets.TOKEN_PAT }} \
-            --store-password-in-clear-text
+          dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github --username ${{ github.repository_owner }} --password ${{ secrets.TOKEN_PAT }} --store-password-in-clear-text
 
       - name: Restore
         run: dotnet restore Shell.Blazor/Shell.Blazor.csproj
