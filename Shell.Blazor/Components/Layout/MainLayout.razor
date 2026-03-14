@@ -53,6 +53,7 @@
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+        Console.WriteLine($"[Shell] LocationChanged: {e.Location}");
         ResolveActiveMfe(e.Location);
         StateHasChanged();
     }
@@ -62,6 +63,8 @@
         // Extraer la ruta relativa
         // uri puede ser: http://localhost/inicio/security
         var path = new Uri(uri).AbsolutePath;
+        Console.WriteLine($"[Shell] ResolveActiveMfe path={path} currentKey={_activeMfeKey} currentUrl={_activeMfeUrl}");
+
 
         string? newKey = null;
         string? newUrl = null;
@@ -117,6 +120,8 @@
     [JSInvokable]
     public void OnMfeNavigated(string mfePath)
     {
+        Console.WriteLine($"[Shell] OnMfeNavigated mfePath={mfePath}");
+        Console.WriteLine($"[Shell] URI actual={Nav.Uri}");
         if (_activeMfeKey is null) return;
 
         // mfePath llega como "security" o "dashboard"
