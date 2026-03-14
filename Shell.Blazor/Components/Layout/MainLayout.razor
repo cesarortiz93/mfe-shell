@@ -107,12 +107,18 @@
         // lo limpiamos por si viene con slash al inicio
         var cleanPath = mfePath.TrimStart('/');
 
-        // Si es la ruta raíz del MFE no agregamos subruta
-        var shellPath = string.IsNullOrEmpty(cleanPath)
-            ? $"/{_activeMfeKey.ToLower()}"
-            : $"/{_activeMfeKey.ToLower()}/{cleanPath}";
+        // Ignorar ruta vacía o raíz
+        if (string.IsNullOrEmpty(cleanPath) || cleanPath == "/") return;
 
-        Nav.NavigateTo(shellPath, forceLoad: false);
+        var shellPath = $"/{_activeMfeKey.ToLower()}/{cleanPath}";
+        var currentPath = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/');
+        var newPath = shellPath.TrimEnd('/');
+
+        // Solo navegar si la URL realmente cambió
+        if (currentPath == newPath) return;
+
+        // Actualizar URL sin recargar el iframe
+        Nav.NavigateTo(shellPath, forceLoad: false, replace: true);
     }
 
     public async ValueTask DisposeAsync()
