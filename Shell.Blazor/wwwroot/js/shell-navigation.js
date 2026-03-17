@@ -8,6 +8,10 @@ window.listenMfeNavigation = function (dotnetRef) {
     window._mfeMessageHandler = function (event) {
         if (event.data && event.data.type === 'mfe-navigation') {
             console.log('[Shell] Mensaje recibido:', event.data.path);
+
+            // El Shell guarda en SU sessionStorage
+            sessionStorage.setItem('mfe_last_path', path);
+
             dotnetRef.invokeMethodAsync('OnMfeNavigated', event.data.path);
         }
     };
@@ -17,5 +21,11 @@ window.listenMfeNavigation = function (dotnetRef) {
 };
 
 window.getLastMfePath = function () {
-    return sessionStorage.getItem('mfe_last_path') || '';
+    var path = sessionStorage.getItem('mfe_last_path') || '';
+    console.log('[Shell] getLastMfePath:', path);
+    return path;
+};
+
+window.clearLastMfePath = function () {
+    sessionStorage.removeItem('mfe_last_path');
 };
