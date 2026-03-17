@@ -33,12 +33,13 @@
     private string? _activeMfeUrl;
     private string? _activeMfeKey;
     private DotNetObjectReference<MainLayout>? _dotnetRef;
+    private bool _iframeInitialized = false;
 
     protected override void OnInitialized()
     {
         // Resuelve el MFE activo desde el primer render
         Nav.LocationChanged += OnLocationChanged;
-        ResolveActiveMfe(Nav.Uri);
+        ResolveActiveMfe(Nav.Uri, forceReload: true);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -48,17 +49,36 @@
             // Solo registra el listener de JS aquí
             _dotnetRef = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("listenMfeNavigation", _dotnetRef);
+
+            
+            // Recuperar última subruta si el refresh perdió la ruta
+            var currentPath = new Uri(Nav.Uri).AbsolutePath;
+            var isRootOnly = currentPath == "/inicio"
+                           || currentPath == "/portafolio"
+                           || currentPath == "/siniestros";
+
+            if (isRootOnly)
+            {
+                var lastPath = await JS.InvokeAsync<string>("getLastMfePath");
+                if (!string.IsNullOrEmpty(lastPath))
+                {
+                    var subroute = lastPath.TrimStart('/');
+                    var shellPath = $"{currentPath}/{subroute}";
+                    Console.WriteLine($"[Shell] Restaurando ruta: {shellPath}");
+                    Nav.NavigateTo(shellPath, forceLoad: false, replace: true);
+                }
+            }
         }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         Console.WriteLine($"[Shell] LocationChanged: {e.Location}");
-        ResolveActiveMfe(e.Location);
+        ResolveActiveMfe(e.Location, forceReload: false);
         StateHasChanged();
     }
 
-    private void ResolveActiveMfe(string uri)
+    private void ResolveActiveMfe(string uri, bool forceReload)
     {
         // Extraer la ruta relativa
         // uri puede ser: http://localhost/inicio/security
@@ -105,7 +125,7 @@
 
         // Solo actualizar si el MFE cambió
         // Si solo cambió la subruta NO recargar el iframe
-        if (newKey != _activeMfeKey)
+        if (forceReload || newKey != _activeMfeKey)
         {
             _activeMfeKey = newKey;
             _activeMfeUrl = newUrl;
